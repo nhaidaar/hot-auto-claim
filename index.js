@@ -1,4 +1,5 @@
 const { connect, keyStores, KeyPair } = require("near-api-js");
+const {parseSeedPhrase} = require("near-seed-phrase");
 const { readFileSync } = require("fs");
 const moment = require("moment");
 const prompts = require("prompts");
@@ -45,13 +46,21 @@ const delay = (timeInMinutes) => {
         message: 'Use Telegram Bot as Notification?',
     });
 
+    // USE SEED PHRASE
+    const authConfig = await prompts({
+        type: 'confirm',
+        name: 'useSeed',
+        message: 'Use seed phrase to authorize?',
+    });
+
     // CLAIMING PROCESS
     while (true) {
         for(const [index, value] of listAccounts.entries()) {
-            const [PRIVATE_KEY, ACCOUNT_ID] = value.split("|");
+            const [AUTHORIZATION_DATA, ACCOUNT_ID] = value.split("|");
+            const SECRET_KEY = authConfig.useSeed ? parseSeedPhrase(AUTHORIZATION_DATA).secretKey : AUTHORIZATION_DATA;
 
             const myKeyStore = new keyStores.InMemoryKeyStore();
-            const keyPair = KeyPair.fromString(PRIVATE_KEY);
+            const keyPair = KeyPair.fromString(SECRET_KEY);
             await myKeyStore.setKey("mainnet", ACCOUNT_ID, keyPair);
 
             const connection = await connect({
