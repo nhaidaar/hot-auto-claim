@@ -1,5 +1,5 @@
-const { connect, keyStores, KeyPair } = require("near-api-js");
-const { readFileSync } = require("fs");
+const {connect, keyStores, KeyPair} = require("near-api-js");
+const {readFileSync} = require("fs");
 const moment = require("moment");
 const prompts = require("prompts");
 const crypto = require("crypto");
@@ -47,7 +47,7 @@ const delay = (timeInMinutes) => {
 
     // CLAIMING PROCESS
     while (true) {
-        for(const [index, value] of listAccounts.entries()) {
+        for (const [index, value] of listAccounts.entries()) {
             const [PRIVATE_KEY, ACCOUNT_ID] = value.split("|");
 
             const myKeyStore = new keyStores.InMemoryKeyStore();
@@ -68,25 +68,40 @@ const delay = (timeInMinutes) => {
                 }] Claiming ${ACCOUNT_ID}`
             );
 
-            // CALL CONTRACT AND GET THE TX HASH
-            const callContract = await wallet.functionCall({
-                contractId: "game.hot.tg",
-                methodName: "claim",
-                args: {},
-            });
-            const hash = callContract.transaction.hash;
+            try {
+                // CALL CONTRACT AND GET THE TX HASH
+                const callContract = await wallet.functionCall({
+                    contractId: "game.hot.tg",
+                    methodName: "claim",
+                    args: {},
+                });
+                const hash = callContract.transaction.hash;
 
-            // SEND NOTIFICATION BOT
-            if (botConfirm.useTelegramBot) {
-                try {
-                    await bot.sendMessage(
-                        userId, 
-                        `Claimed HOT for ${ACCOUNT_ID}\nTx: https://nearblocks.io/id/txns/${hash}`,
-                        { disable_web_page_preview: true }
-                    );    
-                } catch (error) {
-                    console.log(`Send message failed, ${error}`)
+                // SEND NOTIFICATION BOT
+                if (botConfirm.useTelegramBot) {
+                    try {
+                        await bot.sendMessage(
+                            userId,
+                            `Claimed HOT for ${ACCOUNT_ID}\nTx: https://nearblocks.io/id/txns/${hash}`,
+                            {disable_web_page_preview: true}
+                        );
+                    } catch (error) {
+                        console.log(`Send message failed, ${error}`)
+                    }
                 }
+            } catch (e) {
+                if (botConfirm.useTelegramBot) {
+                    try {
+                        await bot.sendMessage(
+                            userId,
+                            `Claim error for ${ACCOUNT_ID}\n\n${e}`,
+                            {disable_web_page_preview: true}
+                        );
+                    } catch (error) {
+                        console.log(`Send message failed, ${error}`)
+                    }
+                }
+                await delay(0.2);
             }
         }
 
