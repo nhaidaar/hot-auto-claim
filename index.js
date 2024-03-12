@@ -108,8 +108,19 @@ const delay = (timeInMinutes) => {
         // REDUCE REAL MINUTES WITH RANDOM
         const randomMinutes = crypto.randomInt(1, 9);
         const delayMinutes = chooseDelay.time - randomMinutes;
+        const delayMessage = `NEXT CLAIM IN ${moment().add(delayMinutes, 'minutes').format("HH:mm:ss")}`;
 
-        console.log(`[ NEXT CLAIM IN ${moment().add(delayMinutes, 'minutes').format("HH:mm:ss")} ]`);
+        try {
+            await bot.sendMessage(
+                userId,
+                `${delayMessage}`,
+                {disable_web_page_preview: true}
+            );
+        } catch (error) {
+            console.log(`Send message failed, ${error}`)
+        }
+
+        console.log(delayMessage);
         await delay(delayMinutes);
     }
 
